@@ -87,6 +87,12 @@ const components: { title: string; href: string; description: string }[] = [
     description:
       "A popup that displays information related to an element when the element receives keyboard focus or the mouse hovers over it.",
   },
+  {
+    title: "Builder Request",
+    href: "/builder-request",
+    description:
+      "A tool to help you build and execute HTTP requests and generate cURL commands.",
+  },
 ];
 
 const Navbar = () => (
