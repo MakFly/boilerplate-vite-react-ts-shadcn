@@ -5,7 +5,7 @@ interface ApiOptions {
 
 export const useApi = (options?: ApiOptions) => {
   const baseUrl =
-    options?.baseUrl || import.meta.env.ORIGIN || "http://localhost:3000";
+    options?.baseUrl || import.meta.env.VITE_API_URL || "http://localhost";
 
   const headers = {
     "Content-Type": "application/json",

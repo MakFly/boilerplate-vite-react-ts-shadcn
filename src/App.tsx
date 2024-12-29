@@ -6,6 +6,7 @@ import Users from "./pages/users/page";
 import Layout from "./Layout";
 import { ThemeProvider } from "@/components/theme-provider";
 import RequestDisplay from "./pages/builder-request/page";
+import PostPage from "./pages/post/page";
 
 const App: React.FC = () => {
   return (
@@ -16,6 +17,7 @@ const App: React.FC = () => {
             <Route path="/" element={<Home />} />
             <Route path="/users" element={<Users />} />
             <Route path="/builder-request" element={<RequestDisplay />} />
+            <Route path="/posts" element={<PostPage />} />
             <Route path="/about" element={<About />} />
           </Routes>
         </Layout>
