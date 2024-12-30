@@ -93,6 +93,12 @@ const components: { title: string; href: string; description: string }[] = [
     description:
       "A tool to help you build and execute HTTP requests and generate cURL commands.",
   },
+  {
+    title: "Posts",
+    href: "/posts",
+    description:
+      "A list of posts that can be filtered and sorted by different criteria.",
+  },
 ];
 
 const Navbar = () => (

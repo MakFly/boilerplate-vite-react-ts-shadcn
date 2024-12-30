@@ -12,36 +12,46 @@ import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "./image-upload";
 
 interface PostFormDialogProps {
-  onSubmit: (data: { title: string; content: string; images: string[] }) => void;
-  initialData?: { title: string; content: string; images: string[] };
+  onSubmit: (data: { title: string; content: string; images: File[] }) => void;
+  initialData?: {
+    title: string;
+    content: string;
+    images: Array<{ id: number; imageUrl: string }>;
+  };
   isEdit?: boolean;
+  isLoading?: boolean;
 }
 
 export function PostFormDialog({
   onSubmit,
-  initialData = { title: "", content: "", images: [] },
+  initialData,
   isEdit = false,
+  isLoading = false,
 }: PostFormDialogProps) {
-  const [title, setTitle] = useState(initialData.title);
-  const [content, setContent] = useState(initialData.content);
-  const [images, setImages] = useState<string[]>(initialData.images);
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [content, setContent] = useState(initialData?.content || "");
+  const [images, setImages] = useState<File[]>([]);
   const [open, setOpen] = useState(false);
 
+  // On réinitialise les valeurs quand le dialog s'ouvre ou que initialData change
   useEffect(() => {
-    if (open && isEdit) {
-      // Ne mettre à jour les champs que lors de l'édition
+    if (isEdit && initialData) {
       setTitle(initialData.title);
       setContent(initialData.content);
-      setImages(initialData.images);
+      setImages([]);
     }
-  }, [open, isEdit, initialData]);
+  }, [isEdit, initialData, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ title, content, images });
+    onSubmit({
+      title,
+      content,
+      images,
+    });
     setOpen(false);
+    // Réinitialiser uniquement si ce n'est pas une édition
     if (!isEdit) {
-      // Réinitialiser uniquement après création, pas après modification
       setTitle("");
       setContent("");
       setImages([]);
@@ -50,8 +60,8 @@ export function PostFormDialog({
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
+    // Réinitialiser les champs quand on ferme le dialogue (seulement en mode création)
     if (!isOpen && !isEdit) {
-      // Réinitialiser uniquement à la fermeture en mode création
       setTitle("");
       setContent("");
       setImages([]);
@@ -61,11 +71,22 @@ export function PostFormDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button>{isEdit ? "Modifier" : "Nouveau post"}</Button>
+        <Button disabled={isLoading}>
+          {isLoading ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {isEdit ? "Modification..." : "Création..."}
+            </div>
+          ) : (
+            isEdit ? "Modifier" : "Nouveau post"
+          )}
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Modifier le post" : "Créer un nouveau post"}</DialogTitle>
+          <DialogTitle>
+            {isEdit ? "Modifier le post" : "Créer un nouveau post"}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
@@ -79,8 +100,20 @@ export function PostFormDialog({
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
-          <ImageUpload onImagesChange={setImages} />
-          <Button type="submit">{isEdit ? "Modifier" : "Publier"}</Button>
+          <ImageUpload
+            onImagesChange={setImages}
+            initialImages={isEdit ? [] : (initialData?.images || [])}
+          />
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {isEdit ? "Modification..." : "Publication..."}
+              </div>
+            ) : (
+              isEdit ? "Modifier" : "Publier"
+            )}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

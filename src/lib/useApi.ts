@@ -4,8 +4,7 @@ interface ApiOptions {
 }
 
 export const useApi = (options?: ApiOptions) => {
-  const baseUrl =
-    options?.baseUrl || import.meta.env.VITE_API_URL || "http://localhost";
+  const baseUrl = ""; // On laisse vide car on utilise le proxy
 
   const headers = {
     "Content-Type": "application/json",
@@ -34,11 +33,57 @@ export const useApi = (options?: ApiOptions) => {
     return response.json();
   };
 
-  const post = async <T>(endpoint: string, data: unknown): Promise<T> => {
+  const post = async <T>(
+    endpoint: string,
+    data: unknown,
+    isMultipart = false
+  ): Promise<T> => {
+    const reqHeaders = Object.fromEntries(
+      Object.entries({ ...headers }).filter(([, value]) => value !== undefined)
+    );
+    let body: string | FormData;
+
+    if (isMultipart) {
+      // On supprime le Content-Type pour FormData
+      // Le navigateur le définira automatiquement avec le boundary
+      delete reqHeaders["Content-Type"];
+      body = data as FormData;
+    } else {
+      body = JSON.stringify(data);
+    }
+
     const response = await fetch(`${baseUrl}${endpoint}`, {
       method: "POST",
-      headers,
-      body: JSON.stringify(data),
+      headers: reqHeaders,
+      body,
+    });
+
+    if (!response.ok) throw new Error(response.statusText);
+    return response.json();
+  };
+
+  const postById = async <T>(
+    endpoint: string,
+    id: string | number,
+    data: unknown,
+    isMultipart = false
+  ): Promise<T> => {
+    const reqHeaders = Object.fromEntries(
+      Object.entries({ ...headers }).filter(([, value]) => value !== undefined)
+    );
+    let body: string | FormData;
+
+    if (isMultipart) {
+      delete reqHeaders["Content-Type"];
+      body = data as FormData;
+    } else {
+      body = JSON.stringify(data);
+    }
+
+    const response = await fetch(`${baseUrl}${endpoint}/${id}`, {
+      method: "POST",
+      headers: reqHeaders,
+      body,
     });
     if (!response.ok) throw new Error(response.statusText);
     return response.json();
@@ -51,10 +96,66 @@ export const useApi = (options?: ApiOptions) => {
   ): Promise<T> => {
     const response = await fetch(`${baseUrl}${endpoint}/${id}`, {
       method: "PUT",
-      headers,
+      headers: {
+        ...headers,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error(response.statusText);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Erreur serveur:", errorText);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  };
+
+  const patch = async <T>(
+    endpoint: string,
+    id: string | number,
+    data: unknown
+  ): Promise<T> => {
+    const response = await fetch(`${baseUrl}${endpoint}/${id}`, {
+      method: "PATCH",
+      headers: {
+        ...headers,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Server error:", errorText);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  };
+
+  const uploadImages = async <T>(
+    endpoint: string,
+    id: string | number,
+    images: File[]
+  ): Promise<T> => {
+    const formData = new FormData();
+    images.forEach((file) => {
+      formData.append("images[]", file);
+    });
+
+    const response = await fetch(`${baseUrl}${endpoint}/${id}/images`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Upload error:", errorText);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     return response.json();
   };
 
@@ -73,7 +174,10 @@ export const useApi = (options?: ApiOptions) => {
     get,
     getById,
     post,
+    postById,
     put,
+    patch,
+    uploadImages,
     delete: remove,
   };
 };

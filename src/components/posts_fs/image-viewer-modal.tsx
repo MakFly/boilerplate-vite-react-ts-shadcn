@@ -126,7 +126,7 @@ export function ImageViewerModal({
     const newY = startPositionRef.current.y + deltaY;
 
     if (containerRef.current && imageRef.current) {
-      // const containerRect = containerRef.current.getBoundingClientRect();
+      const containerRect = containerRef.current.getBoundingClientRect();
       const imageRect = imageRef.current.getBoundingClientRect();
 
       // On limite le déplacement pour éviter de trop sortir
